@@ -9,7 +9,7 @@ import json
 import os
 import math
 
-from utils.data_utils import dataset_local_load
+from utils.data_utils import dataset_local_load, DatasetPathFactory
 from utils.hsic_utils import hsic_split_graph
 from utils.uns_utils import calculate_entropy, cluster_for_prune
 
@@ -404,14 +404,16 @@ def domain_pruning():
                                      layerwise_pruning_method=layerwise_pruning_method,
                                      global_pruning_method=global_pruning_method)
 
-        expert_output_save_dir = f"{base_dir}/{dataset_name}_expert_output_hidden"
+        path_factory = DatasetPathFactory(dataset_dir, dataset_name)
+        data_prefix = path_factory.prefix
+        expert_output_save_dir = f"{base_dir}/{data_prefix}_expert_output_hidden"
         expert_output_judge(pruner, expert_output_save_dir)
 
         if layerwise_pruning_method:
             layerwise_unsupervised_save_dir = f"{base_dir}/cluster_{layerwise_cluster_number}/{layerwise_pruning_method}"
             if not os.path.exists(layerwise_unsupervised_save_dir):
                 os.makedirs(layerwise_unsupervised_save_dir)
-            layerwise_unsupervised_save_path = f"{layerwise_unsupervised_save_dir}/{dataset_name}_unsupervised.json"
+            layerwise_unsupervised_save_path = f"{layerwise_unsupervised_save_dir}/{data_prefix}_unsupervised.json"
             if os.path.exists(layerwise_unsupervised_save_path):
                 with open(layerwise_unsupervised_save_path, 'r') as f:
                     pruner.layerwise_unsupervised_map = json.load(f)
@@ -425,7 +427,7 @@ def domain_pruning():
             layerwise_prune_save_dir = f"{layerwise_unsupervised_save_dir}/rate_{layerwise_prune_rate}"
             if not os.path.exists(layerwise_prune_save_dir):
                 os.makedirs(layerwise_prune_save_dir)
-            layerwise_prune_save_file_path = f"{layerwise_prune_save_dir}/{dataset_name}_prune.json"
+            layerwise_prune_save_file_path = f"{layerwise_prune_save_dir}/{data_prefix}_prune.json"
             if os.path.exists(layerwise_prune_save_file_path):
                 with open(layerwise_prune_save_file_path, 'r') as f:
                     pruner.layerwise_pruned_map = json.load(f)
@@ -445,7 +447,7 @@ def domain_pruning():
             if not os.path.exists(global_unsupervised_save_dir):
                 os.makedirs(global_unsupervised_save_dir)
             pruner.prepare_for_global_unsupervised_pruning(expert_output_save_dir)
-            global_unsupervised_save_path = f"{global_unsupervised_save_dir}/{dataset_name}_unsupervised.json"
+            global_unsupervised_save_path = f"{global_unsupervised_save_dir}/{data_prefix}_unsupervised.json"
             if os.path.exists(global_unsupervised_save_path):
                 with open(global_unsupervised_save_path, 'r') as f:
                     pruner.global_unsupervised_result = json.load(f)
@@ -459,7 +461,7 @@ def domain_pruning():
             global_prune_save_dir = f"{global_unsupervised_save_dir}/rate_{global_prune_rate}"
             if not os.path.exists(global_prune_save_dir):
                 os.makedirs(global_prune_save_dir)
-            global_prune_save_file_path = f"{global_prune_save_dir}/{dataset_name}_prune.json"
+            global_prune_save_file_path = f"{global_prune_save_dir}/{data_prefix}_prune.json"
             if os.path.exists(global_prune_save_file_path):
                 with open(global_prune_save_file_path, 'r') as f:
                     pruner.global_pruned_map = json.load(f)
