@@ -1,11 +1,14 @@
 import json
 import os
 import random
-import pandas as pd
 from datasets import Dataset, load_dataset
+from abc import ABC, abstractmethod
 
 FIELD_DICT = {
-    "MathInstruct": "math", "finance_alpaca": "finance", "code_alpaca_20k": "coding"
+    "MathInstruct": "math",
+    "finance_alpaca": "finance",
+    "code_alpaca_20k": "coding",
+    "MedInstruct-52k": "medical",
 }
 
 PROMPT_DICT = {
@@ -21,34 +24,61 @@ PROMPT_DICT = {
     ),
 }
 
+class DatasetPathFactory:
+    def __init__(self, dataset_dir_path, dataset_name):
+        self.dataset_dir_path = dataset_dir_path
+        self.dataset_name = dataset_name
+        
+        self.dataset_name_split_list = dataset_name.split(".")
+        assert len(self.dataset_name_split_list) == 2, "name split length is not 2"
+        self.prefix = self.dataset_name_split_list[0]
+        self.file_type = self.dataset_name_split_list[1]
 
-def train_valid_split_and_sample(dataset_dir_path, train_length, valid_length):
-    files = sorted(os.listdir(dataset_dir_path))
-    for file_name in files:
-        dataset_name = file_name.split(".")[0]
-        if (("code" in dataset_name.lower() or "finance" in dataset_name.lower() or "math" in dataset_name.lower())
-                and not file_name.endswith("train.json")
-                and not file_name.endswith("valid.json")):
-            file_name_path = os.path.join(dataset_dir_path, file_name)
-            train_sample_path = os.path.join(dataset_dir_path, f"{dataset_name}_{train_length}_train.json")
-            valid_sample_path = os.path.join(dataset_dir_path, f"{dataset_name}_{valid_length}_valid.json")
-            if os.path.exists(train_sample_path) and os.path.exists(valid_sample_path):
-                print(f"{dataset_name} train valid data already exists.")
-                continue
-            with open(file_name_path, "r") as f:
+    @property
+    def dataset_path(self):
+        return os.path.join(self.dataset_dir_path, self.dataset_name)
+
+    def get_train_path(self, length):
+        return os.path.join(self.dataset_dir_path, f"{self.prefix}_{length}-train.{self.file_type}")
+
+    def get_valid_path(self, length):
+        return os.path.join(self.dataset_dir_path, f"{self.prefix}_{length}-valid.{self.file_type}")
+        
+
+
+class DataSpliter:
+    def __init__(self, dataset_dir_path, dataset_name, train_length, valid_length):
+        self.path_factory = DatasetPathFactory(dataset_dir_path, dataset_name)
+        self.train_length = train_length
+        self.valid_length = valid_length
+        
+    def is_splited(self,):
+        if os.path.exists(self.path_factory.get_train_path(self.train_length)) \
+            and os.path.exists(self.path_factory.get_valid_path(self.valid_length)):
+            return True
+        return False
+
+    def split(self,):
+        if not self.is_splited():
+            print("Spliting")
+            with open(self.path_factory.dataset_path, "r") as f:
                 dataset_list = json.load(f)
                 if len(dataset_list) < train_length + valid_length:
                     raise ValueError("dataset length is not enough!")
                 train_valid_sample_split_point = int(len(dataset_list) * train_length / (train_length + valid_length))
-                train_sample_range = dataset_list[:train_valid_sample_split_point]
-                valid_sample_range = dataset_list[train_valid_sample_split_point:]
-                train_sample = random.sample(train_sample_range, train_length)
-                valid_sample = random.sample(valid_sample_range, valid_length)
+                
+                import pdb
+                pdb.set_trace()
+                
+                train_dataset_list = random.sample(dataset_list[:train_valid_sample_split_point], train_length)
+                valid_dataset_list = random.sample(dataset_list[train_valid_sample_split_point:], valid_length)
 
-            with open(train_sample_path, "w") as f:
-                json.dump(train_sample, f)
-            with open(valid_sample_path, "w") as f:
-                json.dump(valid_sample, f)
+            with open(self.path_factory.get_train_path(self.train_length), "w") as f:
+                json.dump(train_dataset_list, f)
+            with open(self.path_factory.get_valid_path(self.valid_length), "w") as f:
+                json.dump(valid_dataset_list, f)     
+        else:
+            print("Existing")
 
 
 def format_parse(message_map, dataset_name):
@@ -60,74 +90,49 @@ def format_parse(message_map, dataset_name):
     return {"prompt": prompt.format_map(message_map), "completion": message_map["output"]}
 
 
-def dataset_local_load(dataset_dir_path, train_length=5000, valid_length=500):
-    files = sorted(os.listdir(dataset_dir_path))
-    train_dataset_map = {}
-    for file_name in files:
-        if file_name.endswith(f"_{train_length}_train.json"):
-            file_name_path = os.path.join(dataset_dir_path, file_name)
-            dataset_name = file_name.split(f"_{train_length}_train.json")[0]
-            with open(file_name_path, "r") as f:
-                dataset_list = json.load(f)
-                res_list = []
-                for data in dataset_list:
-                    if "source" in data and "/CoT/" not in data["source"]:
-                        continue
-                    res_list.append(format_parse(data, dataset_name))
-            train_dataset_map[dataset_name] = res_list
-        elif file_name.startswith("c4"):
-            file_name_path = os.path.join(dataset_dir_path, file_name)
-            dataset_name = "c4"
-            with open(file_name_path, "r") as f:
-                res_list = []
-                for line in f:
-                    data = json.loads(line)
-                    res_list.append({"text": data["text"]})
-            train_dataset_map[dataset_name] = res_list
+def dataset_local_load(dataset_dir_path, dataset_name, train_length=5000, valid_length=500):
+    path_factory = DatasetPathFactory(dataset_dir_path, dataset_name)
+    path_factory.get_train_path(train_length)
+    train_list = []
+    if path_factory.prefix.startswith("c4"):
+        with open(path_factory.get_train_path(train_length), "r") as f:
+            for line in f:
+                data = json.loads(line)
+                train_list.append({"text": data["text"]})
 
-    valid_dataset_map = {}
-    for file_name in files:
-        if file_name.endswith(f"_{valid_length}_valid.json"):
-            file_name_path = os.path.join(dataset_dir_path, file_name)
-            dataset_name = file_name.split(f"_{valid_length}_valid.json")[0]
-            with open(file_name_path, "r") as f:
-                dataset_list = json.load(f)
-                res_list = []
-                for data in dataset_list:
-                    if "source" in data and "/CoT/" not in data["source"]:
-                        continue
-                    res_list.append(format_parse(data, dataset_name))
-            valid_dataset_map[dataset_name] = res_list
+    else:
+        with open(path_factory.get_train_path(train_length), "r") as f:
+            dataset_list = json.load(f)
+            for data in dataset_list:
+                if "source" in data and "/CoT/" not in data["source"]:
+                    continue
+                train_list.append(format_parse(data, path_factory.prefix))
+
+    valid_list = []
+    if path_factory.prefix.startswith("c4"):
+        with open(path_factory.get_valid_path(valid_length), "r") as f:
+            for line in f:
+                data = json.loads(line)
+                train_list.append({"text": data["text"]})
+
+    else:
+        with open(path_factory.get_valid_path(valid_length), "r") as f:
+            dataset_list = json.load(f)
+            for data in dataset_list:
+                if "source" in data and "/CoT/" not in data["source"]:
+                    continue
+                train_list.append(format_parse(data, path_factory.prefix))
 
 
-    return train_dataset_map, valid_dataset_map
-
-
-def dataset_map_merge(dataset_map):
-    dataset_df = pd.DataFrame()
-    for i, (k, v) in enumerate(dataset_map.items()):
-        if i == 0:
-            dataset_df = pd.DataFrame(v)
-        else:
-            dataset_df = pd.concat([dataset_df, pd.DataFrame(v)], axis=0)
-    return Dataset.from_pandas(dataset_df.reset_index(drop=True))
-
-
-def merge_dataset_lists_to_json(dataset_lists, save_path):
-    if os.path.exists(save_path):
-        print("file already exists")
-        return
-    dataset_list = sum(dataset_lists, [])
-    with open(save_path, "w") as f:
-        json.dump(dataset_list, f)
+    return train_list, valid_list
 
 
 if __name__ == "__main__":
-    dataset_dir = "../dataset"
+    dataset_dir_path = "../dataset"
+    dataset_name = "MedInstruct-52k.json"
     train_length = 5000
     valid_length = 500
-    train_valid_split_and_sample(dataset_dir, train_length, valid_length)
+    data_spliter = DataSpliter(dataset_dir_path, dataset_name, train_length, valid_length)
+    data_spliter.split()
 
-    train_dataset_map, valid_dataset_map = dataset_local_load(dataset_dir, train_length=train_length, valid_length=valid_length)
-    # train_dataset = dataset_map_merge(train_dataset_map)
-    # valid_dataset = dataset_map_merge(valid_dataset_map)
+    train_list, valid_list = dataset_local_load(dataset_dir_path, dataset_name, train_length=train_length, valid_length=valid_length)

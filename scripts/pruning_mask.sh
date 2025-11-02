@@ -1,9 +1,10 @@
 #!/bin/bash
-#model_path="/home/test/.cache/modelscope/hub/Qwen/Qwen1___5-MoE-A2___7B"
-model_path="/home/test/.cache/modelscope/hub/deepseek-ai/DeepSeek-V2-Lite"
+model_path="/home/sagemaker-user/user-default-efs/moe_prune/model/Qwen/Qwen1___5-MoE-A2___7B"
+# model_path="/home/sagemaker-user/user-default-efs/moe_prune/model/deepseek-ai/DeepSeek-V2-Lite"
 dataset_dir="dataset"
 #dataset_name_list="c4"
-dataset_name_list="MathInstruct,code_alpaca_20k,finance_alpaca"
+# dataset_name_list="MathInstruct.json,code_alpaca_20k.json,finance_alpaca.json"
+dataset_name_list="MedInstruct-52k.json"
 batch_size=32
 sample_number=1000
 by_domain=1 # only available when using uns method
@@ -50,4 +51,4 @@ if [ "$use_global_pruning" -eq 1 ]; then
     )
 fi
 
-CUDA_VISIBLE_DEVICES="2,3" python pruning_mask.py "${args[@]}"
+CUDA_VISIBLE_DEVICES="0,1" python pruning_mask.py "${args[@]}"

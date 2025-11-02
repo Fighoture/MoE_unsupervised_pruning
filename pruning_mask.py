@@ -15,22 +15,10 @@ from utils.uns_utils import calculate_entropy, cluster_for_prune
 
 
 def domain_calibration_generation(dataset_dir, dataset_name, sample_number=50):
-    train_dataset_map, valid_dataset_map = dataset_local_load(dataset_dir)
-    train_dataset = train_dataset_map[dataset_name]
+    train_dataset, valid_dataset = dataset_local_load(dataset_dir, dataset_name)
     train_df = pd.DataFrame(train_dataset)
     train_df = train_df.sample(n=sample_number, random_state=random_state, axis=0)
     return train_df
-
-
-def mix_calibration_generation(dataset_dir, dataset_name_list, sample_number=50):
-    train_dataset_map, valid_dataset_map = dataset_local_load(dataset_dir)
-    res_df = pd.DataFrame()
-    for dataset_name in dataset_name_list:
-        train_dataset = train_dataset_map[dataset_name]
-        train_df = pd.DataFrame(train_dataset)
-        train_df = train_df.sample(n=sample_number, random_state=random_state, axis=0)
-        res_df = pd.concat([res_df, train_df])
-    return res_df
 
 
 def c4_calibration_generation(dataset_path, sample_number=1000):
@@ -228,7 +216,7 @@ class PreTrainedMoEPruner:
 
             expert_output_save_path = f"{expert_output_save_dir}/layer_{idx}.pth"
             expert_output = torch.load(expert_output_save_path)  # (expert_num, bs, hidden)
-
+            
             layerwise_pruned_expert = sorted(self.layerwise_pruned_map[str(idx)])
             if prune_length is None:
                 prune_length = len(layerwise_pruned_expert)
