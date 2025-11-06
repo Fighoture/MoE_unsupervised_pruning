@@ -14,15 +14,15 @@ def map_to_matrix(prune_map):
 
 
 if __name__ == "__main__":
-    # model = "deepseek"
-    model = "qwen"
+    model = "deepseek"
+    # model = "qwen"
     if model == "deepseek":
         expert_num = 64
     elif model == "qwen":
         expert_num = 60
     else:
         raise ValueError("Model must be either 'deepseek' or 'qwen'")
-    subject_list = ["MathInstruct", "code_alpaca_20k", "finance_alpaca"]
+    subject_list = ["MathInstruct", "code_alpaca_20k", "finance_alpaca", "MedInstruct-52k"]
     load_dir = f"pruned_result/{model}_sota_prune"
     save_dir = "visual/prune_matrix"
     if not os.path.exists(save_dir):

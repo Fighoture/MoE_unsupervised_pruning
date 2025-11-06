@@ -14,8 +14,9 @@ def compute_similarity(embedding):
 
 if __name__ == "__main__":
     model = "deepseek"
-    math_expert_output_dir = "pruned_result/DeepSeek-V2-Lite/sample_1000/MathInstruct_expert_output_hidden"
-    save_dir = "visual/deepseek_MathInstruct_expert_similarity"
+    dataset_name = "MedInstruct-52k"
+    math_expert_output_dir = f"pruned_result/DeepSeek-V2-Lite/sample_1000/{dataset_name}_expert_output_hidden"
+    save_dir = f"visual/deepseek_{dataset_name}_expert_similarity"
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
     layer_output = []
@@ -31,7 +32,7 @@ if __name__ == "__main__":
             plt.xticks(rotation=0)
             plt.yticks(rotation=0)
             save_path = f"{save_dir}/layerwise_{file_name}.png"
-            plt.savefig(save_path)  # 保存图像
+            plt.savefig(save_path)
             plt.close()
         layer_output.append(data)
 
@@ -45,5 +46,5 @@ if __name__ == "__main__":
     plt.yticks(rotation=0)
 
     save_path = f"{save_dir}/global_similarity_matrix.png"
-    plt.savefig(save_path)  # 保存图像
+    plt.savefig(save_path)
     plt.close()

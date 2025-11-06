@@ -2,7 +2,7 @@
 model_path="/home/sagemaker-user/user-default-efs/moe_prune/model/Qwen/Qwen1___5-MoE-A2___7B"
 # model_path="/home/sagemaker-user/user-default-efs/moe_prune/model/deepseek-ai/DeepSeek-V2-Lite"
 dataset_dir="dataset"
-#dataset_name_list="c4"
+# dataset_name_list="c4"
 # dataset_name_list="MathInstruct.json,code_alpaca_20k.json,finance_alpaca.json"
 dataset_name_list="MedInstruct-52k.json"
 batch_size=32
@@ -14,7 +14,7 @@ use_layerwise_pruning=1
 #layerwise_pruning_method="kmeans_prune"
 layerwise_pruning_method="hierarchical_prune"
 #layerwise_pruning_method="hierarchical_prune_with_entropy"
-#layerwise_pruning_method="seer_prune"
+# layerwise_pruning_method="seer_prune"
 #layerwise_pruning_method="hsic_prune"
 layerwise_cluster_number=12 # only available when using uns method
 layerwise_prune_rate=0.1
@@ -22,7 +22,7 @@ layerwise_prune_rate=0.1
 use_global_pruning=1
 #global_pruning_method="kmeans_prune"
 global_pruning_method="hierarchical_prune"
-global_cluster_number=6 # only available when using uns method
+global_cluster_number=8 # only available when using uns method
 global_prune_rate=0.1
 
 args=(

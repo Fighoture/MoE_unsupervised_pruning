@@ -490,7 +490,9 @@ def agnostic_pruning():
             break
     assert dataset_path_name is not None
 
-    dataset_path = f"{dataset_dir}/{dataset_path_name}"
+    path_factory = DatasetPathFactory(dataset_dir, dataset_name)
+    data_prefix = path_factory.prefix
+    dataset_path = path_factory.dataset_path
     train_df = c4_calibration_generation(dataset_path, sample_number=sample_number)
 
     pruner = PreTrainedMoEPruner(model, tokenizer, train_df,
