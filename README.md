@@ -2,15 +2,17 @@
 
 ## Set Up
 ### Requirements
-1. torch+cu123 - 2.3.0
+1. torch+cu121 - 2.3.0
 2. transformers - 4.43.3
 3. flash_attn - 2.6.3
 4. scikit-learn - 1.5.1
+5. peft - 0.10.0
 
 ### Dataset
 - [MathInstruct](https://huggingface.co/datasets/TIGER-Lab/MathInstruct)
 - [CodeAlpaca-20k](https://huggingface.co/datasets/sahil2801/CodeAlpaca-20k)
 - [finance-alpaca](https://huggingface.co/datasets/gbharti/finance-alpaca)
+- [MedInstruct](https://huggingface.co/datasets/xz97/MedInstruct)
 
 ### Action
 - Files in **transformers_py** should be copied to the path of **transformers** package of your running environment. (eg. /path/to/your/envs/{#env_name}/lib/python3.10/site-packages/transformers)
