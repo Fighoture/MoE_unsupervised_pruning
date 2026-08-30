@@ -1,3 +1,5 @@
+
+
 # Cluster-Driven Expert Pruning for Mixture-of-Experts Large Language Models
 
 ## Set Up
@@ -20,7 +22,7 @@
 - Files in **deepseek_model_py** should be copied to the path of **deepseek** model downloaded from HuggingFace.
 
 ### Running scripts
-To prune the DeepseekV2Lite model with the suggested parameters, you can run the script below:
+To prune the DeepSeek-V2-Lite model with the suggested parameters, you can run the script below:
 ```
 ./scripts/pruning_mash.sh >/path/to/your/log
 ```
